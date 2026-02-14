@@ -1,30 +1,17 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard,
-  TrendingUp,
-  CalendarDays,
-  Users,
-  FileText,
-  DollarSign,
-  MessageSquare,
-  MessagesSquare,
-  FolderOpen,
-  BarChart3,
-  Building2,
-  Package,
-  ChevronLeft,
-  ChevronRight,
-  Shield,
+  LayoutDashboard, TrendingUp, CalendarDays, Users, FileText,
+  DollarSign, MessageSquare, MessagesSquare, FolderOpen, BarChart3,
+  Building2, Package, ChevronLeft, ChevronRight, Shield, UserCog, LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 const navGroups = [
   {
     label: "Overview",
-    items: [
-      { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-    ],
+    items: [{ to: "/", icon: LayoutDashboard, label: "Dashboard" }],
   },
   {
     label: "Sales",
@@ -60,6 +47,7 @@ const navGroups = [
     items: [
       { to: "/carriers", icon: Building2, label: "Carrier Access" },
       { to: "/products", icon: Package, label: "Products" },
+      { to: "/user-management", icon: UserCog, label: "User Management", superadminOnly: true },
     ],
   },
 ];
@@ -67,6 +55,7 @@ const navGroups = [
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { role, signOut, user } = useAuth();
 
   return (
     <aside
@@ -82,9 +71,7 @@ export function AppSidebar() {
           <Shield className="w-5 h-5 text-white" />
         </div>
         {!collapsed && (
-          <span className="text-white font-semibold text-[17px] tracking-tight font-poppins">
-            InsuraOS
-          </span>
+          <span className="text-white font-semibold text-[17px] tracking-tight font-poppins">InsuraOS</span>
         )}
       </div>
 
@@ -93,12 +80,11 @@ export function AppSidebar() {
         {navGroups.map((group) => (
           <div key={group.label}>
             {!collapsed && (
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-white/40 px-3 mb-2">
-                {group.label}
-              </p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-white/40 px-3 mb-2">{group.label}</p>
             )}
             <div className="space-y-0.5">
-              {group.items.map((item) => {
+              {group.items.map((item: any) => {
+                if (item.superadminOnly && role !== "superadmin") return null;
                 const isActive = location.pathname === item.to;
                 return (
                   <NavLink
@@ -106,9 +92,7 @@ export function AppSidebar() {
                     to={item.to}
                     className={cn(
                       "flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14.5px] font-medium transition-all duration-150",
-                      isActive
-                        ? "bg-white/12 text-white"
-                        : "text-white/60 hover:text-white hover:bg-white/8"
+                      isActive ? "bg-white/12 text-white" : "text-white/60 hover:text-white hover:bg-white/8"
                     )}
                     style={isActive ? { background: "rgba(255,255,255,0.12)" } : undefined}
                   >
@@ -121,6 +105,20 @@ export function AppSidebar() {
           </div>
         ))}
       </nav>
+
+      {/* User + Sign out */}
+      <div className="border-t border-white/10 px-3 py-3">
+        {!collapsed && user && (
+          <p className="text-white/50 text-[12px] px-3 mb-2 truncate">{user.email}</p>
+        )}
+        <button
+          onClick={signOut}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14.5px] font-medium text-white/60 hover:text-white hover:bg-white/8 transition-all w-full"
+        >
+          <LogOut className="w-[18px] h-[18px] shrink-0" />
+          {!collapsed && <span>Sign Out</span>}
+        </button>
+      </div>
 
       {/* Collapse toggle */}
       <button

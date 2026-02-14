@@ -1,5 +1,5 @@
 import { AppLayout } from "@/components/AppLayout";
-import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/EmptyState";
 import { FolderOpen } from "lucide-react";
 
 const DocumentsPage = () => (
@@ -8,13 +8,7 @@ const DocumentsPage = () => (
       <h1 className="text-[22px] font-semibold text-foreground">Documents</h1>
       <p className="text-muted-foreground text-[15px]">Manage client and policy documents.</p>
     </div>
-    <Card className="border shadow-sm">
-      <CardContent className="p-12 text-center">
-        <FolderOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-        <p className="text-[16px] font-semibold text-foreground mb-1">Document Storage</p>
-        <p className="text-[14px] text-muted-foreground">Upload and manage documents once storage is enabled.</p>
-      </CardContent>
-    </Card>
+    <EmptyState icon={FolderOpen} title="No documents yet" description="Upload and manage your documents here once file storage is enabled." />
   </AppLayout>
 );
 
