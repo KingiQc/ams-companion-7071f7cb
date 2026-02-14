@@ -1,34 +1,36 @@
 import { useState } from "react";
-import { Search, Plus, Bell } from "lucide-react";
+import { Search, Plus, Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 export function AppHeader() {
   const [searchQuery, setSearchQuery] = useState("");
   const [addClientOpen, setAddClientOpen] = useState(false);
   const [newClient, setNewClient] = useState({ name: "", email: "", phone: "", type: "individual" });
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  const handleAddClient = () => {
+  const handleAddClient = async () => {
     if (!newClient.name.trim()) {
       toast({ title: "Error", description: "Client name is required", variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.from("clients").insert({
+      name: newClient.name,
+      email: newClient.email,
+      phone: newClient.phone,
+      type: newClient.type,
+      status: "lead",
+      created_by: user?.id,
+    });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
     toast({ title: "Client Added", description: `${newClient.name} has been added successfully.` });
@@ -54,8 +56,7 @@ export function AppHeader() {
             <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-destructive" />
           </Button>
           <Button onClick={() => setAddClientOpen(true)} className="gap-2 text-[15px]">
-            <Plus className="w-4 h-4" />
-            Add Client
+            <Plus className="w-4 h-4" /> Add Client
           </Button>
         </div>
       </header>
@@ -69,35 +70,20 @@ export function AppHeader() {
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label className="text-[15px]">Full Name *</Label>
-              <Input
-                placeholder="e.g. John Doe"
-                value={newClient.name}
-                onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
-              />
+              <Input placeholder="e.g. John Doe" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label className="text-[15px]">Email</Label>
-              <Input
-                type="email"
-                placeholder="e.g. john@email.com"
-                value={newClient.email}
-                onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
-              />
+              <Input type="email" placeholder="e.g. john@email.com" value={newClient.email} onChange={(e) => setNewClient({ ...newClient, email: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label className="text-[15px]">Phone</Label>
-              <Input
-                placeholder="e.g. (555) 123-4567"
-                value={newClient.phone}
-                onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
-              />
+              <Input placeholder="e.g. (555) 123-4567" value={newClient.phone} onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label className="text-[15px]">Client Type</Label>
               <Select value={newClient.type} onValueChange={(v) => setNewClient({ ...newClient, type: v })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="individual">Individual</SelectItem>
                   <SelectItem value="business">Business</SelectItem>

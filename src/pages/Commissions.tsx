@@ -1,13 +1,23 @@
+import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { mockPolicies } from "@/data/mockData";
+import { supabase } from "@/integrations/supabase/client";
+import { EmptyState } from "@/components/EmptyState";
 import { DollarSign } from "lucide-react";
 
 const CommissionsPage = () => {
-  const commissions = mockPolicies.filter((p) => p.status === "active").map((p) => ({
+  const [policies, setPolicies] = useState<any[]>([]);
+
+  useEffect(() => {
+    supabase.from("policies").select("*, clients(name)").eq("status", "active").then(({ data }) => {
+      setPolicies(data || []);
+    });
+  }, []);
+
+  const commissions = policies.map((p) => ({
     ...p,
-    commission: Math.round(p.premium * 0.1),
+    commission: Math.round(Number(p.premium) * 0.1),
     rate: "10%",
   }));
 
@@ -32,23 +42,27 @@ const CommissionsPage = () => {
         </CardContent>
       </Card>
 
-      <div className="space-y-3">
-        {commissions.map((c) => (
-          <Card key={c.id} className="border shadow-sm">
-            <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <p className="text-[15px] font-semibold text-foreground">{c.clientName}</p>
-                <p className="text-[13px] text-muted-foreground">{c.policyNumber} · {c.type}</p>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className="text-[13px] text-muted-foreground">Premium: ${c.premium.toLocaleString()}</span>
-                <Badge variant="outline" className="text-[12px]">Rate: {c.rate}</Badge>
-                <span className="text-[16px] font-bold text-success">${c.commission.toLocaleString()}</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {commissions.length === 0 ? (
+        <EmptyState icon={DollarSign} title="No commissions yet" description="Commissions are calculated from active policies. Add policies to see earnings." />
+      ) : (
+        <div className="space-y-3">
+          {commissions.map((c) => (
+            <Card key={c.id} className="border shadow-sm">
+              <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <p className="text-[15px] font-semibold text-foreground">{c.clients?.name || "—"}</p>
+                  <p className="text-[13px] text-muted-foreground">{c.policy_number} · {c.type}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-[13px] text-muted-foreground">Premium: ${Number(c.premium).toLocaleString()}</span>
+                  <Badge variant="outline" className="text-[12px]">Rate: {c.rate}</Badge>
+                  <span className="text-[16px] font-bold text-success">${c.commission.toLocaleString()}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </AppLayout>
   );
 };
